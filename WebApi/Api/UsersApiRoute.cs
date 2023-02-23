@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Dynamic;
 using System.Linq.Expressions;
 using WebApi.Objects;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -17,10 +18,14 @@ public class UsersApiRoute : IApiRoute
     {
         group.MapGet("users1", OnGet1);
         group.MapGet("users2", OnGet2);
+        group.MapGet("users3", OnGet3);
     }
 
     public async Task<IEnumerable<User>> OnGet1(string[] select)
     {
+        dynamic d = new ExpandoObject();
+
+        d["d"] = d;
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         try
@@ -76,6 +81,30 @@ public class UsersApiRoute : IApiRoute
 
         // compile to Func<Data, Data>
         return lambda.Compile();
+    }
+
+    public async Task<IEnumerable<dynamic>> OnGet3(string[] select)
+    {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        try
+        {
+            return users.Select(u =>
+            {
+                var type = u.GetType();
+                var d = new ExpandoObject() as IDictionary<string, object>;
+                foreach (var sel in select)
+                {
+                    d.Add(sel, type.GetProperty(sel).GetValue(u));
+                }
+                return d;
+            });
+        }
+        finally
+        {
+            stopwatch.Stop();
+            Console.WriteLine(stopwatch.ElapsedTicks);
+        }
     }
 }
 
