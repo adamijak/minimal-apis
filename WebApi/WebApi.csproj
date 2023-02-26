@@ -14,9 +14,13 @@
   <ItemGroup>
     <None Remove="Api\" />
     <None Remove="Objects\" />
+    <None Remove="Helpers\" />
+    <None Remove="Api\Benchmark\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Api\" />
     <Folder Include="Objects\" />
+    <Folder Include="Helpers\" />
+    <Folder Include="Api\Benchmark\" />
   </ItemGroup>
 </Project>

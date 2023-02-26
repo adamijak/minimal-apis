@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Dynamic;
 using System.Linq.Expressions;
+using WebApi.Helpers;
 using WebApi.Objects;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -16,95 +17,11 @@ public class UsersApiRoute : IApiRoute
 
     public void Map(RouteGroupBuilder group)
     {
-        group.MapGet("users1", OnGet1);
-        group.MapGet("users2", OnGet2);
-        group.MapGet("users3", OnGet3);
+        group.MapGet("users", OnGet);
     }
 
-    public async Task<IEnumerable<User>> OnGet1(string[] select)
-    {
-        dynamic d = new ExpandoObject();
+    public IEnumerable<User> OnGet() => users;
 
-        d["d"] = d;
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        try
-        {
-            return users.Select(CreateNewStatement<User>(select));
-        }
-        finally
-        {
-            stopwatch.Stop();
-            Console.WriteLine(stopwatch.ElapsedTicks);
-        }
-    }
-
-    public async Task<IEnumerable<User>> OnGet2(string[] select)
-    {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        try
-        {
-            return users.Select(u => new User { Id = u.Id, FirstName = u.FirstName });
-        }
-        finally
-        {
-            stopwatch.Stop();
-            Console.WriteLine(stopwatch.ElapsedTicks);
-        }
-    }
-
-    public Func<T, T> CreateNewStatement<T>(params string[] propertyNames)
-    {
-        var type = typeof(T);
-        // input parameter "o"
-        var xParameter = Expression.Parameter(type, "o");
-
-        // new statement "new Data()"
-        var xNew = Expression.New(type);
-
-        // create initializers
-        var bindings = propertyNames.Select(p =>
-        {
-            var property = type.GetProperty(p);
-            // original value "o.Field1"
-            var xOriginal = Expression.Property(xParameter, property);
-
-            // set value "Field1 = o.Field1"
-            return Expression.Bind(property, xOriginal);
-        });
-        // initialization "new Data { Field1 = o.Field1, Field2 = o.Field2 }"
-        var xInit = Expression.MemberInit(xNew, bindings);
-
-        // expression "o => new Data { Field1 = o.Field1, Field2 = o.Field2 }"
-        var lambda = Expression.Lambda<Func<T, T>>(xInit, xParameter);
-
-        // compile to Func<Data, Data>
-        return lambda.Compile();
-    }
-
-    public async Task<IEnumerable<dynamic>> OnGet3(string[] select)
-    {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        try
-        {
-            return users.Select(u =>
-            {
-                var type = u.GetType();
-                var d = new ExpandoObject() as IDictionary<string, object>;
-                foreach (var sel in select)
-                {
-                    d.Add(sel, type.GetProperty(sel).GetValue(u));
-                }
-                return d;
-            });
-        }
-        finally
-        {
-            stopwatch.Stop();
-            Console.WriteLine(stopwatch.ElapsedTicks);
-        }
-    }
+  
 }
 
